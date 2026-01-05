@@ -6,7 +6,6 @@ import (
 	"hris-backend/internal/bootstrap"
 	"hris-backend/internal/routes"
 	"hris-backend/pkg/logger"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -55,12 +54,12 @@ func main() {
 
 		// Don't panic if .env is not found - in Docker, env vars are passed directly
 		if loadErr != nil {
-			fmt.Println("Warning: .env file not found (this is OK in Docker, env vars will be used)")
+			logger.Warn("Warning: .env file not found (this is OK in Docker, env vars will be used)")
 		}
 
 		appContainer, err := bootstrap.NewContainer()
 		if err != nil {
-			log.Fatalf("Failed to initialize application container: %v", err)
+			logger.Errorw("Failed to initialize application container: ", err)
 		}
 		defer appContainer.Close()
 

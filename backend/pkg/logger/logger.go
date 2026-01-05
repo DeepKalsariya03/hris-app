@@ -23,6 +23,10 @@ func Errorw(msg string, keysAndValues ...interface{}) {
 	logger.Sugar().Errorw(msg, keysAndValues...)
 }
 
+func Debug(v ...interface{}) {
+	logger.Sugar().Debug(v...)
+}
+
 func Debugf(format string, v ...interface{}) {
 	logger.Sugar().Debugf(format, v...)
 }
@@ -33,4 +37,12 @@ func Infof(format string, v ...interface{}) {
 
 func Info(v ...interface{}) {
 	logger.Sugar().Info(v...)
+}
+
+func Warn(v ...interface{}) {
+	logger.Sugar().Warn(v...)
+}
+
+func Warnf(format string, v ...interface{}) {
+	logger.Sugar().Warnf(format, v...)
 }
