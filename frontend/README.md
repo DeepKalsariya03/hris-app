@@ -1,16 +1,18 @@
-# HRIS Frontend Application
+# HRIS Frontend
 
 A modern, responsive Human Resource Information System (HRIS) frontend application built with React, TypeScript, and Vite.
 
 ## Tech Stack
 
 ### Core Framework
+
 - **React 19.2.0** - Latest React with improved performance and features
 - **TypeScript 5.9.3** - Type-safe development with strict mode enabled
 - **Vite 7.2.4** - Lightning-fast build tool with dev server
 - **React Router DOM 7.11.0** - Client-side routing
 
 ### UI & Styling
+
 - **TailwindCSS 3.4.17** - Utility-first CSS framework
 - **Radix UI** - Unstyled, accessible component library
   - Dialog, Dropdown Menu, Avatar, Label, Separator, Slot
@@ -20,16 +22,19 @@ A modern, responsive Human Resource Information System (HRIS) frontend applicati
 - **clsx & tailwind-merge** - Conditional class name utilities
 
 ### State Management & Data Fetching
+
 - **TanStack Query (React Query) 5.90.16** - Powerful data fetching and caching
 - **React Hook Form 7.70.0** - Performant form state management
 - **Zod 4.3.5** - Schema validation
 - **@hookform/resolvers** - Form validation with Zod
 
 ### HTTP Client & Utilities
+
 - **Axios 1.13.2** - Promise-based HTTP client
 - **date-fns 4.1.0** - Modern date utility library
 
 ### Development Tools
+
 - **ESLint 9.39.1** - Code linting with TypeScript, React Hooks, and React Refresh rules
 - **@vitejs/plugin-react-swc** - Fast refresh using SWC compiler
 - **SWC** - Super-fast TypeScript/JavaScript compiler
@@ -72,32 +77,41 @@ frontend/
 ### Directory Overview
 
 #### `/src/components`
+
 - **`ui/`** - Base UI components built with Radix UI and TailwindCSS (Button, Input, Card, Dialog, etc.)
 - **`layout/`** - Layout-specific components that structure the page (Header, Sidebar, Main layout)
 - **`shared/`** - Shared components used across multiple features
 
 #### `/src/features`
+
 Feature-based organization where each feature contains its own components, hooks, and logic:
+
 - **`auth/`** - Authentication-related functionality (login, register, password reset)
 
 #### `/src/pages`
+
 Route-level components that correspond to application routes
 
 #### `/src/hooks`
+
 Custom React hooks for reusable stateful logic
 
 #### `/src/lib`
+
 Utility functions, API client configuration, and shared logic
 
 #### `/src/types`
+
 Global TypeScript type definitions and interfaces
 
 #### `/src/config`
+
 Application configuration files (API endpoints, constants, etc.)
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and pnpm
 
 ### Installation
@@ -142,16 +156,20 @@ pnpm lint
 ## Configuration
 
 ### Path Aliases
+
 The project uses path aliases configured in both TypeScript and Vite:
+
 - `@/*` maps to `./src/*`
 
 Example:
+
 ```typescript
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/hooks/useAuth'
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 ```
 
 ### TypeScript Configuration
+
 - **Target:** ES2022
 - **Module System:** ESNext with bundler resolution
 - **Strict Mode:** Enabled
@@ -159,11 +177,13 @@ import { useAuth } from '@/hooks/useAuth'
 - **Additional Checks:** No unused locals/parameters, no fallthrough cases
 
 ### TailwindCSS Configuration
+
 - **Dark Mode:** Class-based strategy
 - **Custom Theme:** Extended with CSS variables for theming
 - **Design Tokens:** Border radius, colors using HSL values
 
 ### ESLint Configuration
+
 - **TypeScript ESLint:** Recommended rules
 - **React Hooks:** Enforces rules of hooks
 - **React Refresh:** Optimizes for Vite HMR
@@ -171,19 +191,23 @@ import { useAuth } from '@/hooks/useAuth'
 ## Design System
 
 ### Color Palette
+
 The application uses HSL-based CSS variables for theming:
+
 - Primary, secondary, accent colors
 - Destructive/error states
 - Muted/foreground colors
 - Chart colors for data visualization
 
 ### Component Architecture
+
 - **Composition:** Components are built using composition patterns
 - **Variants:** Using `class-variance-authority` for component variants
 - **Accessibility:** Radix UI primitives ensure WCAG compliance
 - **Responsive:** Mobile-first approach with Tailwind breakpoints
 
 ### Styling Approach
+
 - **Utility-First:** TailwindCSS for rapid development
 - **Component Variants:** CVA for managing component states
 - **CSS-in-JS Alternative:** Using Tailwind's @apply for component-specific styles
@@ -192,6 +216,7 @@ The application uses HSL-based CSS variables for theming:
 ## API Integration
 
 The application uses:
+
 - **Axios** for HTTP requests with interceptors
 - **TanStack Query** for data fetching, caching, and state management
 - **Zod** for runtime type validation of API responses
@@ -199,6 +224,7 @@ The application uses:
 ## Features
 
 ### Authentication
+
 - Login functionality
 - Registration
 - Password management
@@ -206,17 +232,20 @@ The application uses:
 - Session management
 
 ### Current Status
+
 The application is in early development with authentication features being implemented.
 
 ## Development Guidelines
 
 ### Component Organization
+
 1. Place reusable UI components in `components/ui/`
 2. Create feature-specific folders in `features/` for complex functionality
 3. Use composition over inheritance
 4. Keep components small and focused
 
 ### Code Style
+
 - Use TypeScript for all new files
 - Follow functional programming patterns
 - Prefer composition over inheritance
@@ -224,6 +253,7 @@ The application is in early development with authentication features being imple
 - Implement proper error boundaries
 
 ### Performance
+
 - Lazy load routes and heavy components
 - Use React.memo for expensive components
 - Implement proper loading and error states
@@ -233,6 +263,7 @@ The application is in early development with authentication features being imple
 ## Browser Support
 
 Modern browsers with ES2022 support:
+
 - Chrome/Edge 90+
 - Firefox 88+
 - Safari 14+

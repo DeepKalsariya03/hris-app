@@ -1,10 +1,12 @@
 import * as React from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input, InputProps } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
+type PasswordInputProps = React.ComponentProps<"input">;
+
+const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, ...props }, ref) => {
     const [showPassword, setShowPassword] = React.useState(false);
     const disabled = props.value === "" || props.disabled;

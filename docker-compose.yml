@@ -121,15 +121,34 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
+    image: hris-frontend:latest
     container_name: hris_frontend
+    restart: unless-stopped
     ports:
-      - "${VITE_PORT:-5173}:5173"
+      - "${CLIENT_PORT:-8080}:8080"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     environment:
+      NODE_ENV: ${SERVER_ENV}
       VITE_API_URL: ${VITE_API_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/log/nginx
+      - /run
     networks:
       - hris_net
 

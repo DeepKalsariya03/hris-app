@@ -7,28 +7,34 @@ A REST API built with Go following Clean Architecture principles for Human Resou
 The backend is built using the following technologies:
 
 ### Core Framework & Language
+
 - **Go 1.25.1** - Primary programming language
 - **Echo v4** - High-performance, minimalist Go web framework for routing and middleware
 
 ### Database & ORM
+
 - **MySQL 8.0** - Relational database management system
 - **GORM** - Go's ORM (Object-Relational Mapping) library for database operations
 - **MySQL Driver for GORM** - Database driver for MySQL connections
 
 ### Object Storage
+
 - **MinIO** - High-performance, S3-compatible object storage for file management
 - **MinIO Go SDK v7** - Go client library for MinIO operations
 
 ### Logging & Configuration
+
 - **Zap (Uber)** - Fast, structured, leveled logging library
 - **godotenv** - Load environment variables from .env file
 
 ### Containerization & Deployment
+
 - **Docker** - Containerization platform
 - **Docker Compose** - Multi-container orchestration
 - **Alpine Linux** - Minimal Docker image for production deployment
 
 ### Database Migration
+
 - **golang-migrate/migrate** - Database migration tool for managing schema changes
 
 ## Folder Structure & Clean Architecture Pattern
@@ -81,41 +87,48 @@ backend/
 ### Clean Architecture Principles
 
 #### 1. **Dependency Rule**
+
 Dependencies flow inward, with the innermost layers containing business logic and outer layers containing infrastructure details.
 
 #### 2. **Layer Separation**
 
 **Handler Layer (Presentation)**
+
 - Location: `internal/modules/{module}/handler.go`
 - Responsibility: Handle HTTP requests/responses
 - Depends on: Service layer interfaces
 - Example: `health/handler.go:18-24`
 
 **Service Layer (Business Logic)**
+
 - Location: `internal/modules/{module}/service.go`
 - Responsibility: Implement business rules and orchestrate operations
 - Depends on: Repository layer interfaces
 - Example: `health/service.go:15-17`
 
 **Repository Layer (Data Access)**
+
 - Location: `internal/modules/{module}/repository.go`
 - Responsibility: Database operations and data persistence
 - Depends on: Infrastructure (GORM)
 - Example: `health/repository.go:21-35`
 
 #### 3. **Dependency Injection**
+
 - Implemented via `bootstrap/container.go`
 - Creates and wires all dependencies
 - Provides clean dependency management and testability
 - Example: `bootstrap/container.go:17-33`
 
 #### 4. **Interface-Based Design**
+
 - Services and Repositories are defined as interfaces
 - Enables easy mocking for testing
 - Promotes loose coupling between layers
 - Example: `health/service.go:3-5` and `health/repository.go:9-11`
 
 #### 5. **Configuration Management**
+
 - Environment-based configuration
 - Centralized in `internal/config/config.go`
 - Supports default values and environment variable overrides
@@ -134,17 +147,20 @@ Dependencies flow inward, with the innermost layers containing business logic an
 This is the easiest way to run the complete application stack including database and storage.
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd hris-app
    ```
 
 2. **Configure environment variables**
+
    ```bash
    cp .env.example .env
    ```
 
    Edit the `.env` file with your configuration:
+
    ```env
    # Database Configuration
    MYSQL_ROOT_PASSWORD=root_password
@@ -186,11 +202,13 @@ This is the easiest way to run the complete application stack including database
    ```
 
 3. **Start all services**
+
    ```bash
    docker-compose up --build
    ```
 
    This will start:
+
    - MySQL database (port 3306)
    - Database migration service
    - MinIO object storage (ports 9000, 9001)
@@ -198,16 +216,19 @@ This is the easiest way to run the complete application stack including database
    - Frontend (port 5173)
 
 4. **Access the API**
+
    - API Base URL: `http://localhost:8080`
    - Health Check: `http://localhost:8080/health`
    - MinIO Console: `http://localhost:9001`
 
 5. **Stop services**
+
    ```bash
    docker-compose down
    ```
 
    To remove volumes as well:
+
    ```bash
    docker-compose down -v
    ```
@@ -217,22 +238,26 @@ This is the easiest way to run the complete application stack including database
 For local development without Docker containers.
 
 1. **Install dependencies**
+
    ```bash
    cd backend
    go mod download
    ```
 
 2. **Set up MySQL database**
+
    - Install MySQL 8.0 locally
    - Create database: `CREATE DATABASE hris_db;`
    - Update `.env` with your MySQL credentials
 
 3. **Set up MinIO (Optional)**
+
    - Install MinIO locally or use a cloud S3 service
    - Update `.env` with MinIO credentials
    - Skip file upload features if not needed
 
 4. **Run database migrations**
+
    ```bash
    # Install golang-migrate if not installed
    # https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md
@@ -241,11 +266,13 @@ For local development without Docker containers.
    ```
 
 5. **Run the application**
+
    ```bash
    go run cmd/api/main.go
    ```
 
    Or build and run:
+
    ```bash
    go build -o hris-be-service ./cmd/api
    ./hris-be-service
@@ -274,12 +301,14 @@ curl http://localhost:8080/health
 ### Development Workflow
 
 1. **Adding a New Module**
+
    - Create a new directory under `internal/modules/{module-name}/`
    - Implement `handler.go`, `service.go`, and `repository.go`
    - Register the handler in `internal/routes/api.go`
    - Wire dependencies in `internal/bootstrap/container.go`
 
 2. **Database Migrations**
+
    - Create migration files in `migrations/` directory
    - Use naming convention: `{version}_{name}.up.sql` and `{version}_{name}.down.sql`
    - Run migrations using the migrate service or tool
@@ -291,36 +320,39 @@ curl http://localhost:8080/health
 
 ### Environment Variables Reference
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MYSQL_HOST` | Database host | localhost |
-| `MYSQL_PORT` | Database port | 3306 |
-| `MYSQL_USER` | Database user | root |
-| `MYSQL_PASSWORD` | Database password | root_password |
-| `MYSQL_DATABASE` | Database name | hris_db |
-| `SERVER_PORT` | API server port | 8080 |
-| `SERVER_ENV` | Environment (development/production) | development |
-| `JWT_SECRET` | JWT signing secret | your-super-secret-jwt-key |
-| `JWT_EXPIRES_IN` | JWT expiration time | 24h |
-| `LOG_LEVEL` | Logging level | debug |
-| `MINIO_ENDPOINT` | MinIO endpoint URL | |
-| `MINIO_ACCESS_KEY` | MinIO access key | |
-| `MINIO_SECRET_KEY` | MinIO secret key | |
-| `MINIO_BUCKET_NAME` | MinIO bucket name | |
-| `MAX_FILE_SIZE_MB` | Maximum file upload size | 40 |
+| Variable            | Description                          | Default                   |
+| ------------------- | ------------------------------------ | ------------------------- |
+| `MYSQL_HOST`        | Database host                        | localhost                 |
+| `MYSQL_PORT`        | Database port                        | 3306                      |
+| `MYSQL_USER`        | Database user                        | root                      |
+| `MYSQL_PASSWORD`    | Database password                    | root_password             |
+| `MYSQL_DATABASE`    | Database name                        | hris_db                   |
+| `SERVER_PORT`       | API server port                      | 8080                      |
+| `SERVER_ENV`        | Environment (development/production) | development               |
+| `JWT_SECRET`        | JWT signing secret                   | your-super-secret-jwt-key |
+| `JWT_EXPIRES_IN`    | JWT expiration time                  | 24h                       |
+| `LOG_LEVEL`         | Logging level                        | debug                     |
+| `MINIO_ENDPOINT`    | MinIO endpoint URL                   |                           |
+| `MINIO_ACCESS_KEY`  | MinIO access key                     |                           |
+| `MINIO_SECRET_KEY`  | MinIO secret key                     |                           |
+| `MINIO_BUCKET_NAME` | MinIO bucket name                    |                           |
+| `MAX_FILE_SIZE_MB`  | Maximum file upload size             | 40                        |
 
 ### Troubleshooting
 
 **Database Connection Issues**
+
 - Ensure MySQL container is running: `docker-compose ps`
 - Check database logs: `docker-compose logs db`
 - Verify environment variables in `.env`
 
 **Port Conflicts**
+
 - Change ports in `.env` if default ports are in use
 - Ensure no other services are using the same ports
 
 **Migration Failures**
+
 - Check database connectivity
 - Verify migration file syntax
 - Review migration logs: `docker-compose logs migrate`
