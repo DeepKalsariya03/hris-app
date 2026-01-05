@@ -87,8 +87,8 @@ This will start:
 ### Step 3: Access the Application
 
 - **Frontend Application**: http://localhost:8080
-- **Backend API**: http://localhost:8080/api
-- **Health Check**: http://localhost:8080/health
+- **Backend API**: http://localhost:8081
+- **Health Check**: http://localhost:8081/health
 - **MinIO Console**: http://localhost:9001
 
 ### Step 4: Verify Services
@@ -342,7 +342,7 @@ pnpm lint
 
 ## License
 
-[MIT LICENSE]()
+[MIT LICENSE](https://github.com/PickHD/hris-app/blob/main/LICENSE)
 
 ## Support
 
