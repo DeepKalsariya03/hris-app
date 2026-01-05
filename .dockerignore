@@ -1,0 +1,6 @@
+data/
+minio-data/
+.git/
+.gitignore
+.vscode/
+\*.log
