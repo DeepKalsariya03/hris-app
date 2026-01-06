@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useLogin } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   username: z.string().min(1, {
@@ -32,6 +34,15 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function LoginForm() {
   const { mutate: login, isPending, error } = useLogin();
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate, token]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
+import { toast } from "sonner";
 
 interface LoginPayload {
   username: string;
@@ -8,8 +9,11 @@ interface LoginPayload {
 }
 
 interface LoginResponse {
-  token: string;
   message: string;
+  data: {
+    token: string;
+    must_change_password: boolean;
+  };
 }
 
 export const useLogin = () => {
@@ -19,14 +23,12 @@ export const useLogin = () => {
     mutationFn: async (payload: LoginPayload) => {
       // axios do POST request
       const response = await api.post<LoginResponse>("/auth/login", payload);
-      console.log(payload);
-
       return response.data;
     },
 
     onSuccess: (data) => {
-      // save token
-      localStorage.setItem("token", data.token);
+      // save token - the token is nested in data.data.token
+      localStorage.setItem("token", data.data.token);
 
       // navigate to dashboard
       navigate("/dashboard");
@@ -36,4 +38,23 @@ export const useLogin = () => {
       console.error("Login error:", error);
     },
   });
+};
+
+export const useLogout = () => {
+  const navigate = useNavigate();
+
+  const logout = () => {
+    // remove token from localStorage
+    localStorage.removeItem("token");
+
+    // show success toast
+    toast.success("Logout successful", {
+      description: "You have been logged out successfully",
+    });
+
+    // redirect to login page
+    navigate("/login");
+  };
+
+  return { logout };
 };
