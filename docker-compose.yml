@@ -32,7 +32,7 @@ services:
     image: migrate/migrate
     container_name: db-migrate
     volumes:
-      - ./migrations/:/migrations
+      - ./backend/migrations/:/migrations
     command:
       [
         "-path",
@@ -86,7 +86,10 @@ services:
     networks:
       - hris_net
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: hris-backend:latest
     container_name: hris_backend
     restart: unless-stopped
     ports:

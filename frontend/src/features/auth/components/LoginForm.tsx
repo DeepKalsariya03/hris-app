@@ -106,7 +106,7 @@ export function LoginForm() {
               Authenticating...
             </>
           ) : (
-            "Sign In to Dashboard"
+            "Sign In"
           )}
         </Button>
       </form>

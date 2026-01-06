@@ -1,12 +1,14 @@
 include .env
 export
 
-.PHONY: help build run build-be run-be build-fe run-fe run-docker migrate-up migrate-down clean test
+.PHONY: help build run build-be run-be build-fe run-fe run-docker migrate-create migrate-up migrate-down clean-be clean-fe test
 
 # Variables
 APP_NAME := hris-app
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-BUILD_DIR := bin
+BUILD_DIR_BE := bin
+BUILD_DIR_FE := dist
+PATH_DB_MIGRATIONS := ./backend/migrations
 
 # Default target
 help:
@@ -19,9 +21,11 @@ help:
 	@echo "  build-fe    - Build the application frontend"
 	@echo "  run-fe      - Run the application frontend"
 	@echo "  run-docker  - Run the application using container"
+	@echo "  migrate-create - Create database migrations"
 	@echo "  migrate-up  - Run database migrations"
 	@echo "  migrate-down- Rollback database migrations"
-	@echo "  clean       - Clean build artifacts"
+	@echo "  clean-be    - Clean build backend artifacts"
+	@echo "  clean-fe    - Clean build frontend artifacts"
 	@echo "  test        - Run tests"
 
 # Build both services
@@ -36,7 +40,7 @@ run:
 # Build BE
 build-be:
 	@echo "Building backend..."
-	@cd backend && mkdir -p $(BUILD_DIR) && go build -o $(BUILD_DIR)/$(APP_NAME) ./cmd/api
+	@cd backend && mkdir -p $(BUILD_DIR_BE) && go build -o $(BUILD_DIR_BE)/$(APP_NAME) ./cmd/api
 
 # Run BE
 run-be:
@@ -61,24 +65,29 @@ run-docker:
 # Run database migrations up
 migrate-up:
 	@echo "Running database migrations..."
-	@migrate -path ./migrations -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)" up
+	@migrate -path $(PATH_DB_MIGRATIONS) -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_HOST):$(MYSQL_PORT))/$(MYSQL_DATABASE)?multiStatements=true" up
 
 # Rollback database migrations
 migrate-down:
 	@echo "Rolling back database migrations..."
-	@migrate -path ./migrations -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)" down
+	@migrate -path $(PATH_DB_MIGRATIONS) -database "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp($(MYSQL_HOST):$(MYSQL_PORT))/$(MYSQL_DATABASE)?multiStatements=true" down
 
 # Create new migration
 migrate-create:
 	@if [ -z "$(NAME)" ]; then echo "Usage: make migrate-create NAME=migration_name"; exit 1; fi
-	@migrate create -ext sql -dir ./migrations -seq $(NAME)
+	@migrate create -ext sql -dir $(PATH_DB_MIGRATIONS) -seq $(NAME)
 
-# Clean build artifacts
-clean:
-	@echo "Cleaning build artifacts..."
-	@rm -rf $(BUILD_DIR)
+# Clean build artifacts BE
+clean-be:
+	@echo "Cleaning build backend artifacts..."
+	@cd backend && rm -rf $(BUILD_DIR_BE)
+
+# Clean build artifacts FE
+clean-fe:
+	@echo "Cleaning build frontend artifacts..."
+	@cd frontend && rm -rf $(BUILD_DIR_FE)
 
 # Run tests
 test:
 	@echo "Running tests..."
-	@go test -v ./...
+	@cd backend && go test -v ./...

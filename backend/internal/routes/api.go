@@ -12,7 +12,7 @@ type Router struct {
 	app       *echo.Echo
 }
 
-func NewRouter(container *bootstrap.Container) *Router {
+func newRouter(container *bootstrap.Container) *Router {
 	app := echo.New()
 
 	return &Router{
@@ -21,12 +21,13 @@ func NewRouter(container *bootstrap.Container) *Router {
 	}
 }
 
-func (r *Router) SetupMiddleware() {
+func (r *Router) setupMiddleware() {
 	r.app.Use(middleware.Recover())
 	r.app.Use(middleware.CORS())
+	r.app.Use(middleware.RequestID())
 }
 
-func (r *Router) SetupRoutes() {
+func (r *Router) setupRoutes() {
 	r.app.GET("/health", r.container.HealthCheckHandler.HealthCheck)
 
 	// api := r.app.Group("/api/v1")
@@ -36,10 +37,9 @@ func (r *Router) SetupRoutes() {
 }
 
 func ServeHTTP(container *bootstrap.Container) *echo.Echo {
-	router := NewRouter(container)
-
-	router.SetupMiddleware()
-	router.SetupRoutes()
+	router := newRouter(container)
+	router.setupMiddleware()
+	router.setupRoutes()
 
 	return router.app
 }
