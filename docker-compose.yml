@@ -120,6 +120,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       MAX_REQUEST_BODY_SIZE_MB: ${MAX_REQUEST_BODY_SIZE_MB}
       MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB}
+      NOMINATIM_URL: ${NOMINATIM_URL}
     networks:
       - hris_net
     healthcheck:

@@ -8,6 +8,8 @@ type UserProfileResponse struct {
 	NIK               string `json:"nik"`
 	DepartmentName    string `json:"department_name"`
 	ShiftName         string `json:"shift_name"`
+	ShiftStartTime    string `json:"shift_start_time"`
+	ShiftEndTime      string `json:"shift_end_time"`
 	PhoneNumber       string `json:"phone_number"`
 	ProfilePictureUrl string `json:"profile_picture_url"`
 }
