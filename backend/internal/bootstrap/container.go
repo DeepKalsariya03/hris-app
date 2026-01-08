@@ -4,6 +4,7 @@ import (
 	"hris-backend/internal/config"
 	"hris-backend/internal/infrastructure"
 	"hris-backend/internal/middleware"
+	"hris-backend/internal/modules/attendance"
 	"hris-backend/internal/modules/auth"
 	"hris-backend/internal/modules/health"
 	"hris-backend/internal/modules/user"
@@ -12,15 +13,17 @@ import (
 )
 
 type Container struct {
-	Config  *config.Config
-	DB      *infrastructure.GormConnectionProvider
-	Storage *infrastructure.MinioStorageProvider
-	JWT     *infrastructure.JwtProvider
-	Bcrypt  *infrastructure.BcryptHasher
+	Config   *config.Config
+	DB       *infrastructure.GormConnectionProvider
+	Storage  *infrastructure.MinioStorageProvider
+	JWT      *infrastructure.JwtProvider
+	Bcrypt   *infrastructure.BcryptHasher
+	Location *infrastructure.NominatimFetcher
 
 	HealthCheckHandler *health.Handler
 	AuthHandler        *auth.Handler
 	UserHandler        *user.Handler
+	AttendanceHandler  *attendance.Handler
 
 	AuthMiddleware *middleware.AuthMiddleware
 }
@@ -32,30 +35,36 @@ func NewContainer() (*Container, error) {
 	storage := infrastructure.NewMinioStorage(cfg)
 	jwt := infrastructure.NewJWTProvider(cfg)
 	bcrypt := infrastructure.NewBcryptHasher(bcrypt.DefaultCost)
+	nominatim := infrastructure.NewNominatimFetcher(cfg)
 
 	healthRepo := health.NewRepository(db.GetDB())
 	userRepo := user.NewRepository(db.GetDB())
+	attendanceRepo := attendance.NewRepository(db.GetDB())
 
 	healthSvc := health.NewService(healthRepo)
 	authSvc := auth.NewService(userRepo, bcrypt, jwt)
 	userSvc := user.NewService(userRepo, bcrypt, storage)
+	attendanceSvc := attendance.NewService(attendanceRepo, userRepo, storage, nominatim)
 
 	healthHandler := health.NewHandler(healthSvc)
 	authHandler := auth.NewHandler(authSvc)
 	userHandler := user.NewHandler(userSvc)
+	attendanceHandler := attendance.NewHandler(attendanceSvc)
 
 	authMiddleware := middleware.NewAuthMiddleware(jwt)
 
 	return &Container{
-		Config:  cfg,
-		DB:      db,
-		Storage: storage,
-		JWT:     jwt,
-		Bcrypt:  bcrypt,
+		Config:   cfg,
+		DB:       db,
+		Storage:  storage,
+		JWT:      jwt,
+		Bcrypt:   bcrypt,
+		Location: nominatim,
 
 		HealthCheckHandler: healthHandler,
 		AuthHandler:        authHandler,
 		UserHandler:        userHandler,
+		AttendanceHandler:  attendanceHandler,
 
 		AuthMiddleware: authMiddleware,
 	}, nil

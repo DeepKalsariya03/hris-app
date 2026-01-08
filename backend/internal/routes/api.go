@@ -47,6 +47,12 @@ func (r *Router) setupRoutes() {
 			users.PUT("/profile", r.container.UserHandler.UpdateProfile)
 			users.PUT("/change-password", r.container.UserHandler.ChangePassword)
 		}
+
+		attendances := api.Group("/attendances", r.container.AuthMiddleware.VerifyToken)
+		{
+			attendances.POST("/clock", r.container.AttendanceHandler.Clock)
+			attendances.GET("/today", r.container.AttendanceHandler.GetTodayStatus)
+		}
 	}
 }
 

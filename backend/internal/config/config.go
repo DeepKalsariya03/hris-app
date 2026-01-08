@@ -5,12 +5,13 @@ import (
 )
 
 type Config struct {
-	Database   DatabaseConfig
-	JWT        JWTConfig
-	Server     ServerConfig
-	Logging    LoggingConfig
-	Minio      MinioConfig
-	FileUpload FileUploadConfig
+	Database              DatabaseConfig
+	JWT                   JWTConfig
+	Server                ServerConfig
+	Logging               LoggingConfig
+	Minio                 MinioConfig
+	FileUpload            FileUploadConfig
+	ExternalServiceConfig ExternalServiceConfig
 }
 
 type DatabaseConfig struct {
@@ -51,6 +52,10 @@ type FileUploadConfig struct {
 	MaxFileSizeMB        int
 }
 
+type ExternalServiceConfig struct {
+	NominatimUrl string
+}
+
 func Load() *Config {
 	config := &Config{
 		Database: DatabaseConfig{
@@ -84,6 +89,9 @@ func Load() *Config {
 		FileUpload: FileUploadConfig{
 			MaxRequestBodySizeMB: getEnvInt("MAX_REQUEST_BODY_SIZE_MB", 50),
 			MaxFileSizeMB:        getEnvInt("MAX_FILE_SIZE_MB", 40),
+		},
+		ExternalServiceConfig: ExternalServiceConfig{
+			NominatimUrl: getEnv("NOMINATIM_URL", ""),
 		},
 	}
 

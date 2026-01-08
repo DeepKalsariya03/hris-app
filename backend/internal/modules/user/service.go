@@ -47,6 +47,8 @@ func (s *service) GetProfile(userID uint) (*UserProfileResponse, error) {
 		}
 		if user.Employee.Shift != nil {
 			resp.ShiftName = user.Employee.Shift.Name
+			resp.ShiftStartTime = user.Employee.Shift.StartTime
+			resp.ShiftEndTime = user.Employee.Shift.EndTime
 		}
 	} else {
 		resp.FullName = "Super Administrator"

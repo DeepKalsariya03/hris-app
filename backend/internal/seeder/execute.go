@@ -3,6 +3,7 @@ package seeder
 import (
 	"hris-backend/internal/modules/master"
 	"hris-backend/internal/modules/user"
+	"hris-backend/pkg/constants"
 	"hris-backend/pkg/logger"
 
 	"gorm.io/gorm"
@@ -33,8 +34,8 @@ func Execute(db *gorm.DB) error {
 			Role     string
 			IsActive bool
 		}{
-			{"EMP001", "Taufik Januar", itDept.ID, regularShift.ID, "EMPLOYEE", true},
-			{"ADM001", "Super Admin", hrDept.ID, regularShift.ID, "SUPERADMIN", true},
+			{"EMP001", "Taufik Januar", itDept.ID, regularShift.ID, string(constants.UserRoleEmployee), true},
+			{"ADM001", "Super Admin", hrDept.ID, regularShift.ID, string(constants.UserRoleSuperadmin), true},
 		}
 
 		for _, empData := range employeesToSeed {
