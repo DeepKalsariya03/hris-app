@@ -10,3 +10,9 @@ export interface LoginResponse {
     must_change_password: boolean;
   };
 }
+
+export interface DecodedToken {
+  user_id: number;
+  role: string;
+  exp: number;
+}
