@@ -1,18 +1,26 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "@/pages/auth/LoginPage";
-import ProfilePage from "@/pages/profile/ProfilePage";
 import { Toaster } from "@/components/ui/sonner";
-import DashboardLayout from "./components/layout/DashboardLayout";
+
+// Auth Components
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicRoute } from "./components/auth/PublicRoute";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-import AttendanceHistoryPage from "./pages/dashboard/AttendanceHistoryPage";
+import DashboardLayout from "./components/layout/DashboardLayout";
+
+// Pages - Auth & General
+import LoginPage from "@/pages/auth/LoginPage";
+import DashboardPage from "@/pages/dashboard/DashboardPage";
+import ProfilePage from "@/pages/profile/ProfilePage";
+import AttendanceHistoryPage from "@/pages/dashboard/AttendanceHistoryPage";
+
+// Pages - Admin
+import EmployeeListPage from "@/pages/admin/EmployeeListPage";
+import AttendanceRecapPage from "@/pages/admin/AttendanceRecapPage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Route - LOGIN */}
+        {/* === PUBLIC ROUTES === */}
         <Route
           path="/login"
           element={
@@ -25,22 +33,28 @@ function App() {
         {/* Root redirect to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Protected Routes */}
+        {/* === PROTECTED ROUTES (Global) === */}
         <Route
-          path="/"
           element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
           }
         >
+          {/* EMPLOYEE ROUTES */}
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route
-            path="attendance-history"
-            element={<AttendanceHistoryPage />}
-          />
-          <Route path="*" element={<div>404 Not Found</div>} />
+
+          <Route path="history" element={<AttendanceHistoryPage />} />
+
+          {/* SUPERADMIN ROUTES */}
+          <Route element={<ProtectedRoute allowedRoles={["SUPERADMIN"]} />}>
+            <Route path="admin/employees" element={<EmployeeListPage />} />
+            <Route path="admin/recap" element={<AttendanceRecapPage />} />
+          </Route>
+
+          {/* 404 Inside Layout */}
+          <Route path="*" element={<div className="p-10">404 Not Found</div>} />
         </Route>
       </Routes>
 

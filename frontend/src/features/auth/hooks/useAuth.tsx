@@ -1,25 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
 import type { LoginPayload, LoginResponse } from "../types";
 
 export const useLogin = () => {
-  const navigate = useNavigate();
-
   return useMutation({
     mutationFn: async (payload: LoginPayload) => {
       // axios do POST request
-      const response = await api.post<LoginResponse>("/auth/login", payload);
-      return response.data;
+      const { data } = await api.post<LoginResponse>("/auth/login", payload);
+      return data;
     },
 
     onSuccess: (data) => {
       // save token - the token is nested in data.data.token
       localStorage.setItem("token", data.data.token);
-
-      // navigate to dashboard
-      navigate("/dashboard");
     },
 
     onError: (error: any) => {
@@ -30,10 +25,15 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const logout = () => {
     // remove token from localStorage
     localStorage.removeItem("token");
+
+    // clear cache
+    queryClient.removeQueries();
+    queryClient.clear();
 
     // show success toast
     toast.success("Logout successful", {

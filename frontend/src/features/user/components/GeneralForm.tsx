@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { useUpdateProfile } from "../hooks/useProfile";
 
 const generalSchema = z.object({
-  phone_number: z.string().min(10, "Phone number minimum at least 10 digit"),
+  phone_number: z.string(),
 });
 
 interface GeneralFormProps {

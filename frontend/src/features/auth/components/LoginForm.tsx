@@ -18,8 +18,10 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useLogin } from "@/features/auth/hooks/useAuth";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import type { DecodedToken } from "../types";
 
 const formSchema = z.object({
   username: z.string().min(1, {
@@ -36,13 +38,30 @@ export function LoginForm() {
   const { mutate: login, isPending, error } = useLogin();
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
+  const handleRedirect = useCallback(
+    (token: string) => {
+      try {
+        const decoded = jwtDecode<DecodedToken>(token);
+
+        if (decoded.role === "SUPERADMIN") {
+          navigate("/admin/recap", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Invalid token:", error);
+        localStorage.removeItem("token");
+      }
+    },
+    [navigate]
+  );
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     if (token) {
-      navigate("/dashboard");
+      handleRedirect(token);
     }
-  }, [navigate, token]);
+  }, [handleRedirect]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -54,14 +73,34 @@ export function LoginForm() {
 
   async function onSubmit(data: FormValues) {
     login(data, {
-      onSuccess: () => {
-        toast.success("Login successful", {
-          description: "Welcome back to HRIS Dashboard.",
-        });
+      onSuccess: (response: any) => {
+        const token = response.token || response.data?.token;
+        const mustChange =
+          response.must_change_password || response.data?.must_change_password;
+
+        if (token) {
+          localStorage.setItem("token", token);
+
+          if (mustChange) {
+            toast.warning("Security Alert", {
+              description:
+                "You must change your password before continuing, go to profile > open security tab",
+            });
+            navigate("/profile");
+            return;
+          }
+
+          toast.success("Login successful", {
+            description: "Redirecting to your workspace...",
+          });
+
+          handleRedirect(token);
+        } else {
+          toast.error("Login failed", { description: "No token received" });
+        }
       },
       onError: (err: any) => {
         const msg = err.response?.data?.message || "Login Failed";
-
         toast.error("Authentication failed", {
           description: msg,
         });
