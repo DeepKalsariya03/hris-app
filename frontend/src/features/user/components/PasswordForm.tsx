@@ -33,16 +33,10 @@ export function PasswordForm() {
     defaultValues: { old_password: "", new_password: "", confirm_password: "" },
   });
 
-  const onSubmit = (values: any) => {
-    changePassword(
-      {
-        old_password: values.old_password,
-        new_password: values.new_password,
-      },
-      {
-        onSuccess: () => form.reset(),
-      }
-    );
+  const onSubmit = (values: z.infer<typeof passwordSchema>) => {
+    changePassword(values, {
+      onSuccess: () => form.reset(),
+    });
   };
 
   return (

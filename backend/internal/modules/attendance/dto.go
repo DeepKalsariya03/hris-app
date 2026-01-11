@@ -3,11 +3,11 @@ package attendance
 import "time"
 
 type ClockRequest struct {
-	Latitude    float64 `json:"latitude" validate:"required"`
-	Longitude   float64 `json:"longitude" validate:"required"`
-	ImageBase64 string  `json:"image_base64" validate:"required"`
-	Address     string  `json:"address"`
-	Notes       string  `json:"notes"`
+	Latitude    float64 `json:"latitude" validate:"required,latitude"`
+	Longitude   float64 `json:"longitude" validate:"required,longitude"`
+	ImageBase64 string  `json:"image_base64" validate:"required,base64"`
+	Address     string  `json:"address" validate:"omitempty,max=500"`
+	Notes       string  `json:"notes" validate:"omitempty,max=500"`
 }
 
 type AttendanceResponse struct {
@@ -32,7 +32,6 @@ type FilterParams struct {
 	Search       string
 	Page         int
 	Limit        int
-	Timezone     string
 }
 
 type RecapResponse struct {

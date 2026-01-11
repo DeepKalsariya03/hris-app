@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { StatsCards } from "@/features/admin/components/StatsCards";
 import { PaginationControls } from "@/components/shared/PaginationControls";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function AttendanceRecapPage() {
   const now = new Date();
@@ -38,18 +39,20 @@ export default function AttendanceRecapPage() {
 
   const [isExporting, setIsExporting] = useState(false);
 
-  const { data, isLoading } = useAttendanceRecap(
-    page,
-    startDate,
-    endDate,
-    search
-  );
-
   const handleExport = async () => {
     setIsExporting(true);
     await exportAttendanceExcel(startDate, endDate, search);
     setIsExporting(false);
   };
+
+  const debouncedSearch = useDebounce(search, 500);
+
+  const { data, isLoading } = useAttendanceRecap(
+    page,
+    startDate,
+    endDate,
+    debouncedSearch
+  );
 
   const { data: statsData, isLoading: statsLoading } = useDashboardStats();
 

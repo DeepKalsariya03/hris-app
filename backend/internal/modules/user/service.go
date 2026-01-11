@@ -37,9 +37,10 @@ func (s *service) GetProfile(userID uint) (*UserProfileResponse, error) {
 	}
 
 	resp := &UserProfileResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		Role:     user.Role,
+		ID:                 user.ID,
+		Username:           user.Username,
+		Role:               user.Role,
+		MustChangePassword: user.MustChangePassword,
 	}
 
 	if user.Employee != nil {
@@ -71,6 +72,10 @@ func (s *service) UpdateProfile(ctx context.Context, userID uint, req *UpdatePro
 
 	if user.Employee == nil {
 		return errors.New("employee data not found")
+	}
+
+	if req.FullName != "" {
+		user.Employee.FullName = req.FullName
 	}
 
 	if req.PhoneNumber != "" {

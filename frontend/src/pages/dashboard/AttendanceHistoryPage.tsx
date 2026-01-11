@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import {
   Table,
   TableBody,
@@ -16,12 +16,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Calendar, MapPin, Clock, FileText } from "lucide-react";
 import { useAttendanceHistory } from "@/features/attendance/hooks/useAttendance";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { AttendanceLog } from "@/features/attendance/types";
+import { PaginationControls } from "@/components/shared/PaginationControls";
 
 export default function AttendanceHistoryPage() {
   const now = new Date();
@@ -38,10 +37,21 @@ export default function AttendanceHistoryPage() {
 
   const formatTime = (timeStr?: string) => {
     if (!timeStr) return "-";
-    return new Date(timeStr).toLocaleTimeString("id-ID", {
+
+    const date = new Date(timeStr);
+    if (isNaN(date.getTime())) return "-";
+
+    return date.toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const formatDateSafe = (dateStr: string, pattern: string) => {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    if (!isValid(date)) return "-";
+    return format(date, pattern);
   };
 
   const getStatusColor = (status: string) => {
@@ -141,9 +151,10 @@ export default function AttendanceHistoryPage() {
                     <TableRow key={log.id}>
                       {/* DATE */}
                       <TableCell className="font-medium">
-                        {format(new Date(log.date), "dd MMM yyyy")}
+                        {/* GUNAKAN HELPER AMAN */}
+                        {formatDateSafe(log.date, "dd MMM yyyy")}
                         <div className="text-xs text-slate-400 font-normal">
-                          {format(new Date(log.date), "EEEE")}
+                          {formatDateSafe(log.date, "EEEE")}
                         </div>
                       </TableCell>
 
@@ -170,6 +181,7 @@ export default function AttendanceHistoryPage() {
                         {log.check_in_time ? (
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-400" />
+                            {/* GUNAKAN HELPER AMAN */}
                             {formatTime(log.check_in_time)}
                           </div>
                         ) : (
@@ -182,6 +194,7 @@ export default function AttendanceHistoryPage() {
                         {log.check_out_time ? (
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-400" />
+                            {/* GUNAKAN HELPER AMAN */}
                             {formatTime(log.check_out_time)}
                           </div>
                         ) : (
@@ -221,7 +234,7 @@ export default function AttendanceHistoryPage() {
                             </div>
                           )}
 
-                          {/* Notes Indicator (Opsional) */}
+                          {/* Notes Indicator */}
                           {log.notes && (
                             <div className="flex items-center gap-1 text-[10px] text-blue-600 mt-1">
                               <FileText className="w-3 h-3" />
@@ -247,33 +260,14 @@ export default function AttendanceHistoryPage() {
           )}
 
           {/* PAGINATION */}
-          {!isLoading && meta && meta.total_page > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <div className="text-sm text-slate-500">
-                Page {meta.page} of {meta.total_page} ({meta.total_data}{" "}
-                entries)
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={meta.page <= 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" /> Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setPage((p) => Math.min(meta.total_page, p + 1))
-                  }
-                  disabled={meta.page >= meta.total_page}
-                >
-                  Next <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+          {meta && (
+            <PaginationControls
+              currentPage={meta.page}
+              totalPages={meta.total_page}
+              totalData={meta.total_data}
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
           )}
         </CardContent>
       </Card>

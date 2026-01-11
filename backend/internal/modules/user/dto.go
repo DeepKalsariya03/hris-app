@@ -1,26 +1,29 @@
 package user
 
 type UserProfileResponse struct {
-	ID                uint   `json:"id"`
-	Username          string `json:"username"`
-	Role              string `json:"role"`
-	FullName          string `json:"full_name"`
-	NIK               string `json:"nik"`
-	DepartmentName    string `json:"department_name"`
-	ShiftName         string `json:"shift_name"`
-	ShiftStartTime    string `json:"shift_start_time"`
-	ShiftEndTime      string `json:"shift_end_time"`
-	PhoneNumber       string `json:"phone_number"`
-	ProfilePictureUrl string `json:"profile_picture_url"`
+	ID                 uint   `json:"id"`
+	Username           string `json:"username"`
+	Role               string `json:"role"`
+	FullName           string `json:"full_name"`
+	NIK                string `json:"nik"`
+	DepartmentName     string `json:"department_name"`
+	ShiftName          string `json:"shift_name"`
+	ShiftStartTime     string `json:"shift_start_time"`
+	ShiftEndTime       string `json:"shift_end_time"`
+	PhoneNumber        string `json:"phone_number"`
+	ProfilePictureUrl  string `json:"profile_picture_url"`
+	MustChangePassword bool   `json:"must_change_password"`
 }
 
 type UpdateProfileRequest struct {
-	PhoneNumber string `form:"phone_number"`
+	FullName    string `form:"full_name" json:"full_name" validate:"omitempty,min=3,max=100"`
+	PhoneNumber string `form:"phone_number" json:"phone_number" validate:"omitempty,numeric,min=10,max=15"`
 }
 
 type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=6"`
+	OldPassword     string `json:"old_password" validate:"required"`
+	NewPassword     string `json:"new_password" validate:"required,min=6,max=72,nefield=OldPassword"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=NewPassword"`
 }
 
 type EmployeeListResponse struct {
@@ -34,7 +37,6 @@ type EmployeeListResponse struct {
 
 type CreateEmployeeRequest struct {
 	Username     string `json:"username" validate:"required"`
-	Password     string `json:"password" validate:"required,min=6"`
 	FullName     string `json:"full_name" validate:"required"`
 	NIK          string `json:"nik" validate:"required"`
 	DepartmentID uint   `json:"department_id" validate:"required"`

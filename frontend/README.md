@@ -84,7 +84,8 @@ docker compose up -d --build
 docker compose logs -f frontend
 ```
 
-The app will be available at `http://localhost:8080`
+The app will be available at `http://localhost:8080` (internal)
+Note: When using Docker Compose, access the app through the NGINX gateway at `http://hris.local`
 
 ### Local Development
 
@@ -142,6 +143,8 @@ Key variables (see root `.env.example` for complete list):
 |----------|-------------|---------|
 | `VITE_API_URL` | Backend API URL | http://localhost:8080 |
 | `VITE_PORT` | Dev server port | 5173 |
+
+**Note:** When using Docker Compose with the NGINX gateway, the frontend communicates with the backend through the gateway at `/api/v1`. The `VITE_API_URL` is set automatically during the Docker build.
 
 ### TypeScript Configuration
 

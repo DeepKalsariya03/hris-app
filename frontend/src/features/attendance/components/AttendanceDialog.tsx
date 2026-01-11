@@ -150,11 +150,13 @@ export function AttendanceDialog({
   const handleSubmit = () => {
     if (!imgSrc || !location) return;
 
+    const rawBase64 = imgSrc.split(",")[1];
+
     clock(
       {
         latitude: location.lat,
         longitude: location.lng,
-        image_base64: imgSrc,
+        image_base64: rawBase64,
         notes: isManualLocation
           ? "[MANUAL] User adjusted location on map"
           : "[GPS] Auto-detected",
@@ -189,6 +191,7 @@ export function AttendanceDialog({
                 audio={false}
                 ref={webcamRef}
                 screenshotFormat="image/jpeg"
+                screenshotQuality={0.8}
                 videoConstraints={{ facingMode: "user" }}
                 className="w-full h-full object-cover"
                 onUserMediaError={() => setErrorMsg("Camera permission denied")}

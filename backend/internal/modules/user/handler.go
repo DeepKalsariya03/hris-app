@@ -46,6 +46,10 @@ func (h *Handler) UpdateProfile(ctx echo.Context) error {
 		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
 	}
 
+	if err := ctx.Validate(&req); err != nil {
+		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
+	}
+
 	file, _ := ctx.FormFile("photo")
 
 	err = h.service.UpdateProfile(ctx.Request().Context(), userContext.UserID, &req, file)
@@ -66,6 +70,10 @@ func (h *Handler) ChangePassword(ctx echo.Context) error {
 
 	var req ChangePasswordRequest
 	if err := ctx.Bind(&req); err != nil {
+		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
 		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
 	}
 
@@ -104,6 +112,10 @@ func (h *Handler) GetAllEmployees(ctx echo.Context) error {
 func (h *Handler) CreateEmployee(ctx echo.Context) error {
 	var req CreateEmployeeRequest
 	if err := ctx.Bind(&req); err != nil {
+		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
 		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
 	}
 

@@ -26,21 +26,71 @@ export const useUpdateProfile = () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update profile");
+      const responseData = error.response?.data;
+
+      let title = "Update Profile Failed";
+      let description = responseData?.message || "Failed to update profile";
+
+      if (responseData?.error) {
+        if (
+          responseData.error.errors &&
+          Array.isArray(responseData.error.errors)
+        ) {
+          title = "Validation Failed";
+          description = responseData.error.errors
+            .map((err: any) => err.message)
+            .join(", ");
+        } else if (responseData.error.message) {
+          description = responseData.error.message;
+        } else if (typeof responseData.error === "string") {
+          description = responseData.error;
+        }
+      }
+
+      toast.error(title, {
+        description: description,
+      });
     },
   });
 };
 
 export const useChangePassword = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: PasswordPayload) => {
       return await api.put("/users/change-password", payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Password changed successfully");
+
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to change password");
+      const responseData = error.response?.data;
+
+      let title = "Change Password Failed";
+      let description = responseData?.message || "Failed to change password";
+
+      if (responseData?.error) {
+        if (
+          responseData.error.errors &&
+          Array.isArray(responseData.error.errors)
+        ) {
+          title = "Validation Failed";
+          description = responseData.error.errors
+            .map((err: any) => err.message)
+            .join(", ");
+        } else if (responseData.error.message) {
+          description = responseData.error.message;
+        } else if (typeof responseData.error === "string") {
+          description = responseData.error;
+        }
+      }
+
+      toast.error(title, {
+        description: description,
+      });
     },
   });
 };

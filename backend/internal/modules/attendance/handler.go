@@ -30,6 +30,10 @@ func (h *Handler) Clock(ctx echo.Context) error {
 		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
 	}
 
+	if err := ctx.Validate(&req); err != nil {
+		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
+	}
+
 	resp, err := h.service.Clock(ctx.Request().Context(), userContext.UserID, &req)
 	if err != nil {
 		logger.Errorw("Clock Request failed : ", err)
@@ -124,12 +128,7 @@ func (h *Handler) ExportAttendance(ctx echo.Context) error {
 }
 
 func (h *Handler) GetDashboardStats(ctx echo.Context) error {
-	tz := ctx.QueryParam("timezone")
-	if tz == "" {
-		tz = "Asia/Jakarta"
-	}
-
-	resp, err := h.service.GetDashboardStats(ctx.Request().Context(), tz)
+	resp, err := h.service.GetDashboardStats(ctx.Request().Context())
 	if err != nil {
 		logger.Errorw("Get Dashboard Stats failed: ", err)
 
@@ -154,18 +153,12 @@ func (h *Handler) parseFilter(ctx echo.Context) *FilterParams {
 		fmt.Sscanf(d, "%d", &deptID)
 	}
 
-	tz := ctx.QueryParam("timezone")
-	if tz == "" {
-		tz = "Asia/Jakarta"
-	}
-
 	return &FilterParams{
 		Page:         page,
 		Limit:        limit,
 		StartDate:    ctx.QueryParam("start_date"),
 		EndDate:      ctx.QueryParam("end_date"),
 		Search:       ctx.QueryParam("search"),
-		Timezone:     tz,
 		DepartmentID: uint(deptID),
 	}
 }
