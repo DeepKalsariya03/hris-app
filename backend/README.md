@@ -11,6 +11,7 @@ A REST API built with Go following Clean Architecture principles for the Human R
 - **MinIO** - S3-compatible object storage
 - **Zap** - Structured logging
 - **golang-migrate** - Database migration tool
+- **NGINX** - Reverse proxy (see root README for gateway configuration)
 
 ## Architecture
 
@@ -55,7 +56,8 @@ docker compose up -d --build
 docker compose logs -f backend
 ```
 
-The API will be available at `http://localhost:8081`
+The API will be available at `http://localhost:8081` (internal)
+Note: When using Docker Compose, access the API through the NGINX gateway at `http://hris.local/api/v1`
 
 ### Local Development
 
@@ -103,8 +105,24 @@ Key variables (see root `.env.example` for complete list):
 
 ## API Testing
 
+### When using Docker Compose (with NGINX Gateway)
+
 ```bash
-# Health check
+# Health check through gateway
+curl http://hris.local/api/v1/health
+
+# Expected response
+{
+  "messages": "OK",
+  "data": true,
+  "error": null
+}
+```
+
+### When running locally
+
+```bash
+# Health check direct to backend
 curl http://localhost:8080/health
 
 # Expected response
