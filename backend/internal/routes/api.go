@@ -3,6 +3,7 @@ package routes
 import (
 	"hris-backend/internal/bootstrap"
 	"hris-backend/pkg/constants"
+	"hris-backend/pkg/utils"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -30,14 +31,15 @@ func (r *Router) setupMiddleware() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 	r.app.Use(middleware.RequestID())
+	r.app.Validator = utils.NewValidator()
 }
 
 func (r *Router) setupRoutes() {
 	// public
-	r.app.GET("/health", r.container.HealthCheckHandler.HealthCheck)
+	r.app.GET("/health", r.container.HealthCheckHandler.HealthCheck, r.container.RateLimiterMiddleware.Init())
 
 	api := r.app.Group("/api/v1")
-	api.POST("/auth/login", r.container.AuthHandler.Login)
+	api.POST("/auth/login", r.container.AuthHandler.Login, r.container.RateLimiterMiddleware.Init())
 
 	// protected global
 	protected := api.Group("", r.container.AuthMiddleware.VerifyToken)

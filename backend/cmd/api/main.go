@@ -28,7 +28,12 @@ const (
 // @host localhost:8080
 // @BasePath /api/v1
 func main() {
-	time.Local = time.UTC
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		panic("Failed to load timezone Asia/Jakarta. Make sure tzdata is installed: " + err.Error())
+	}
+	time.Local = loc
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	args := os.Args[1:]
 	mode := httpServerMode
@@ -65,7 +70,7 @@ func main() {
 			os.Exit(1)
 		}
 	case httpServerMode:
-		attendance.StartGeocodeWorker(appContainer.DB.GetDB(), appContainer.Location)
+		attendance.StartGeocodeWorker(appContainer.DB.GetDB(), appContainer.Location, appContainer.GeocodeQueue)
 
 		logger.Info("Starting HRIS API Server...")
 

@@ -10,6 +10,7 @@ export interface UserProfile {
   shift_end_time: string;
   phone_number: string;
   profile_picture_url: string;
+  must_change_password: boolean;
 }
 
 export interface PasswordPayload {

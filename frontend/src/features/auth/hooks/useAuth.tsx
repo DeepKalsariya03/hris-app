@@ -18,7 +18,30 @@ export const useLogin = () => {
     },
 
     onError: (error: any) => {
-      console.error("Login error:", error);
+      const responseData = error.response?.data;
+
+      let title = "Login Failed";
+      let description = responseData?.message || "Failed to login";
+
+      if (responseData?.error) {
+        if (
+          responseData.error.errors &&
+          Array.isArray(responseData.error.errors)
+        ) {
+          title = "Validation Failed";
+          description = responseData.error.errors
+            .map((err: any) => err.message)
+            .join(", ");
+        } else if (responseData.error.message) {
+          description = responseData.error.message;
+        } else if (typeof responseData.error === "string") {
+          description = responseData.error;
+        }
+      }
+
+      toast.error(title, {
+        description: description,
+      });
     },
   });
 };

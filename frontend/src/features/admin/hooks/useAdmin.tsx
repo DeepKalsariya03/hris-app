@@ -63,10 +63,9 @@ export const exportAttendanceExcel = async (
   search: string
 ) => {
   try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const response = await api.get("/admin/attendances/export", {
-      params: { start_date: startDate, end_date: endDate, search, timezone },
+      params: { start_date: startDate, end_date: endDate, search },
       responseType: "blob",
     });
 
@@ -105,7 +104,30 @@ export const useEmployeeMutations = () => {
       await invalidateEmployees();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create employee");
+      const responseData = error.response?.data;
+
+      let title = "Create Employee Failed";
+      let description = responseData?.message || "Failed to create employee";
+
+      if (responseData?.error) {
+        if (
+          responseData.error.errors &&
+          Array.isArray(responseData.error.errors)
+        ) {
+          title = "Validation Failed";
+          description = responseData.error.errors
+            .map((err: any) => err.message)
+            .join(", ");
+        } else if (responseData.error.message) {
+          description = responseData.error.message;
+        } else if (typeof responseData.error === "string") {
+          description = responseData.error;
+        }
+      }
+
+      toast.error(title, {
+        description: description,
+      });
     },
   });
 
@@ -124,7 +146,30 @@ export const useEmployeeMutations = () => {
       await invalidateEmployees();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update employee");
+      const responseData = error.response?.data;
+
+      let title = "Update Employee Failed";
+      let description = responseData?.message || "Failed to update employee";
+
+      if (responseData?.error) {
+        if (
+          responseData.error.errors &&
+          Array.isArray(responseData.error.errors)
+        ) {
+          title = "Validation Failed";
+          description = responseData.error.errors
+            .map((err: any) => err.message)
+            .join(", ");
+        } else if (responseData.error.message) {
+          description = responseData.error.message;
+        } else if (typeof responseData.error === "string") {
+          description = responseData.error;
+        }
+      }
+
+      toast.error(title, {
+        description: description,
+      });
     },
   });
 

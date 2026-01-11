@@ -35,7 +35,6 @@ import {
 
 const formSchema = z.object({
   username: z.string().min(3, "Min 3 characters"),
-  password: z.string().optional(),
   full_name: z.string().min(1, "Name is required"),
   nik: z.string().min(1, "NIK is required"),
   department_id: z.string().min(1, "Select department"),

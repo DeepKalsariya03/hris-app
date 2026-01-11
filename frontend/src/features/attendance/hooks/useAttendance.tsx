@@ -28,11 +28,31 @@ export const useClock = () => {
     },
 
     onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "Failed to submit attendance";
+      const responseData = error.response?.data;
 
-      toast.error("Clock In/Out Failed", {
-        description: msg,
+      let title = "Clock In/Out Failed";
+      let description = responseData?.message || "Failed to submit attendance";
+
+      if (responseData?.error) {
+        if (
+          responseData.error.errors &&
+          Array.isArray(responseData.error.errors)
+        ) {
+          title = "Validation Failed";
+          description = responseData.error.errors
+            .map((err: any) => err.message)
+            .join(", ");
+        }
+        else if (responseData.error.message) {
+          description = responseData.error.message;
+        }
+        else if (typeof responseData.error === "string") {
+          description = responseData.error;
+        }
+      }
+
+      toast.error(title, {
+        description: description,
       });
     },
   });

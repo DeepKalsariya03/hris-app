@@ -22,6 +22,10 @@ func (h *Handler) Login(ctx echo.Context) error {
 		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
 	}
 
+	if err := ctx.Validate(&req); err != nil {
+		return response.NewResponses[any](ctx, http.StatusBadRequest, "Invalid Request", nil, err, nil)
+	}
+
 	resp, err := h.service.Login(req.Username, req.Password)
 	if err != nil {
 		logger.Errorw("Login failed : ", err)

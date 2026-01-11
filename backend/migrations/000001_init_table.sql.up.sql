@@ -53,13 +53,13 @@ CREATE TABLE attendances (
     check_in_lat DECIMAL(10, 8) NOT NULL,
     check_in_long DECIMAL(11, 8) NOT NULL,
     check_in_image_url VARCHAR(255) NOT NULL,
-    check_in_address TEXT NOT NULL,
+    check_in_address VARCHAR(500) NOT NULL,
     
     check_out_time DATETIME NULL,
     check_out_lat DECIMAL(10, 8) NULL,
     check_out_long DECIMAL(11, 8) NULL,
     check_out_image_url VARCHAR(255) NULL,
-    check_out_address TEXT NULL,
+    check_out_address VARCHAR(500) NULL,
     
     status ENUM('PRESENT', 'LATE', 'EXCUSED', 'ABSENT') DEFAULT 'ABSENT',
     is_suspicious BOOLEAN DEFAULT FALSE,
@@ -68,11 +68,11 @@ CREATE TABLE attendances (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
     FOREIGN KEY (shift_id) REFERENCES ref_shifts(id),
     
     UNIQUE KEY unique_attendance_per_day (employee_id, date),
-    INDEX idx_date (date),
-    INDEX idx_status (status)
+    INDEX idx_date_status (date, status),
+    INDEX idx_date_suspicious (date, is_suspicious)
 );
 

@@ -25,8 +25,13 @@ type (
 // NewResponses return dynamic JSON responses
 func NewResponses[T any](ctx echo.Context, statusCode int, message string, data T, err error, meta *Meta) error {
 	var errVal any
+
 	if err != nil {
-		errVal = err.Error()
+		if he, ok := err.(*echo.HTTPError); ok {
+			errVal = he.Message
+		} else {
+			errVal = err.Error()
+		}
 	}
 
 	if statusCode < 400 {

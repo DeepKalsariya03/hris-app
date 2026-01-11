@@ -16,7 +16,7 @@ type GormConnectionProvider struct {
 }
 
 func NewGormConnection(cfg *config.Config) *GormConnectionProvider {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Asia%%2FJakarta",
 		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.DBName)
 
 	// Configure GORM logger
@@ -25,7 +25,7 @@ func NewGormConnection(cfg *config.Config) *GormConnectionProvider {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: gormLogger,
 		NowFunc: func() time.Time {
-			return time.Now().UTC()
+			return time.Now().Local()
 		},
 	})
 	if err != nil {

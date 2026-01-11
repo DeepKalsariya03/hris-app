@@ -20,9 +20,8 @@ FROM alpine:latest
 
 WORKDIR /app
 
-# 1. Install tzdata (untuk Timezone Excel)
-# 2. Install ca-certificates
-RUN apk add --no-cache tzdata ca-certificates
+# Install essensial packages
+RUN apk add --no-cache tzdata ca-certificates curl
 
 # (Opsional) Set Default Timezone Server to Jakarta
 ENV TZ=Asia/Jakarta

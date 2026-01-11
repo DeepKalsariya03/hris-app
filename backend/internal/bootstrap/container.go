@@ -12,12 +12,13 @@ import (
 )
 
 type Container struct {
-	Config   *config.Config
-	DB       *infrastructure.GormConnectionProvider
-	Storage  *infrastructure.MinioStorageProvider
-	JWT      *infrastructure.JwtProvider
-	Bcrypt   *infrastructure.BcryptHasher
-	Location *infrastructure.NominatimFetcher
+	Config       *config.Config
+	DB           *infrastructure.GormConnectionProvider
+	Storage      *infrastructure.MinioStorageProvider
+	JWT          *infrastructure.JwtProvider
+	Bcrypt       *infrastructure.BcryptHasher
+	Location     *infrastructure.NominatimFetcher
+	GeocodeQueue <-chan attendance.GeocodeJob
 
 	HealthCheckHandler *health.Handler
 	AuthHandler        *auth.Handler
@@ -25,7 +26,8 @@ type Container struct {
 	AttendanceHandler  *attendance.Handler
 	MasterHandler      *master.Handler
 
-	AuthMiddleware *middleware.AuthMiddleware
+	AuthMiddleware        *middleware.AuthMiddleware
+	RateLimiterMiddleware *middleware.RateLimiterMiddleware
 }
 
 func NewContainer() (*Container, error) {
@@ -36,6 +38,7 @@ func NewContainer() (*Container, error) {
 	jwt := infrastructure.NewJWTProvider(cfg)
 	bcrypt := infrastructure.NewBcryptHasher(12)
 	nominatim := infrastructure.NewNominatimFetcher(cfg)
+	geocodeQueue := make(chan attendance.GeocodeJob, 100)
 
 	healthRepo := health.NewRepository(db.GetDB())
 	userRepo := user.NewRepository(db.GetDB())
@@ -45,7 +48,7 @@ func NewContainer() (*Container, error) {
 	healthSvc := health.NewService(healthRepo)
 	authSvc := auth.NewService(userRepo, bcrypt, jwt)
 	userSvc := user.NewService(userRepo, bcrypt, storage)
-	attendanceSvc := attendance.NewService(attendanceRepo, userRepo, storage)
+	attendanceSvc := attendance.NewService(attendanceRepo, userRepo, storage, geocodeQueue)
 	masterSvc := master.NewService(masterRepo)
 
 	healthHandler := health.NewHandler(healthSvc)
@@ -55,14 +58,16 @@ func NewContainer() (*Container, error) {
 	masterHandler := master.NewHandler(masterSvc)
 
 	authMiddleware := middleware.NewAuthMiddleware(jwt)
+	rateLimiterMiddleware := middleware.NewRateLimiterMiddleware()
 
 	return &Container{
-		Config:   cfg,
-		DB:       db,
-		Storage:  storage,
-		JWT:      jwt,
-		Bcrypt:   bcrypt,
-		Location: nominatim,
+		Config:       cfg,
+		DB:           db,
+		Storage:      storage,
+		JWT:          jwt,
+		Bcrypt:       bcrypt,
+		Location:     nominatim,
+		GeocodeQueue: geocodeQueue,
 
 		HealthCheckHandler: healthHandler,
 		AuthHandler:        authHandler,
@@ -70,7 +75,8 @@ func NewContainer() (*Container, error) {
 		AttendanceHandler:  attendanceHandler,
 		MasterHandler:      masterHandler,
 
-		AuthMiddleware: authMiddleware,
+		AuthMiddleware:        authMiddleware,
+		RateLimiterMiddleware: rateLimiterMiddleware,
 	}, nil
 }
 

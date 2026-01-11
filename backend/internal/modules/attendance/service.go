@@ -21,17 +21,18 @@ type Service interface {
 	GetMyHistory(ctx context.Context, userID uint, month, year, page, limit int) ([]Attendance, *response.Meta, error)
 	GetAllRecap(ctx context.Context, filter *FilterParams) ([]RecapResponse, *response.Meta, error)
 	GenerateExcel(ctx context.Context, filter *FilterParams) (*excelize.File, error)
-	GetDashboardStats(ctx context.Context, timezone string) (*DashboardStatResponse, error)
+	GetDashboardStats(ctx context.Context) (*DashboardStatResponse, error)
 }
 
 type service struct {
-	repo     Repository
-	userRepo user.Repository
-	storage  StorageProvider
+	repo         Repository
+	userRepo     user.Repository
+	storage      StorageProvider
+	geocodeQueue chan<- GeocodeJob
 }
 
-func NewService(repo Repository, userRepo user.Repository, storage StorageProvider) Service {
-	return &service{repo, userRepo, storage}
+func NewService(repo Repository, userRepo user.Repository, storage StorageProvider, geocodeQueue chan<- GeocodeJob) Service {
+	return &service{repo, userRepo, storage, geocodeQueue}
 }
 
 func (s *service) Clock(ctx context.Context, userID uint, req *ClockRequest) (*AttendanceResponse, error) {
@@ -55,30 +56,35 @@ func (s *service) Clock(ctx context.Context, userID uint, req *ClockRequest) (*A
 	// set address temporary
 	tempAddress := fmt.Sprintf("Processing location... (%f, %f)", req.Latitude, req.Longitude)
 
-	todayAtt, err := s.repo.GetTodayAttendance(employee.ID)
-
 	now := time.Now()
 	todayString := now.Format(constants.DefaultTimeFormat)
 	fileName := fmt.Sprintf("attendance/%d/%s-%d.jpg", employee.ID, todayString, now.Unix())
 
+	shiftStartToday, err := combineDateAndTime(now, employee.Shift.StartTime)
+	if err != nil {
+		return nil, errors.New("invalid shift time configuration")
+	}
+
+	earliersAllowed := shiftStartToday.Add(-2 * time.Hour)
+	if now.Before(earliersAllowed) {
+		return nil, errors.New("cannot check-in, too early")
+	}
+
+	todayAtt, err := s.repo.GetTodayAttendance(employee.ID)
+	// if today no data, its check-in of that employee
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		// if today no data, its check-in of that employee
+		// calculate status is LATE or PRESENT
+		lateThreshold := shiftStartToday.Add(15 * time.Minute)
+		status := string(constants.AttendanceStatusPresent)
+
+		// compare current time with shift time, if more than late threshold, status will changed to LATE
+		if now.After(lateThreshold) {
+			status = string(constants.AttendanceStatusLate)
+		}
+
 		imgUrl, err := s.storage.UploadFileByte(ctx, fmt.Sprintf("in-%s", fileName), imageReader, int64(len(imgBytes)), "image/jpg")
 		if err != nil {
 			return nil, err
-		}
-
-		// calculate status is LATE or PRESENT
-		shiftStart, _ := time.Parse(constants.AttendanceTimeFormat, employee.Shift.StartTime)
-
-		lateThreshold := shiftStart.Add(15 * time.Minute)
-
-		status := string(constants.AttendanceStatusPresent)
-		clockInTimeOnly, _ := time.Parse(constants.AttendanceTimeFormat, now.Format(constants.AttendanceTimeFormat))
-
-		// compare current time with shift time, if more than late threshold, status will changed to LATE
-		if clockInTimeOnly.After(lateThreshold) {
-			status = string(constants.AttendanceStatusLate)
 		}
 
 		newAtt := &Attendance{
@@ -100,7 +106,7 @@ func (s *service) Clock(ctx context.Context, userID uint, req *ClockRequest) (*A
 		}
 
 		// process this attendance (check-in) to geocode worker queue
-		GeocodeQueue <- GeocodeJob{
+		s.geocodeQueue <- GeocodeJob{
 			AttendanceID: newAtt.ID,
 			Latitude:     req.Latitude,
 			Longitude:    req.Longitude,
@@ -115,13 +121,10 @@ func (s *service) Clock(ctx context.Context, userID uint, req *ClockRequest) (*A
 		}, nil
 	}
 
+	// if today already have attendance, but the checkout time is still null, its checkout of that employee
 	if todayAtt != nil && todayAtt.CheckOutTime == nil {
-		// if today already have attendance, but the checkout time is still null, its checkout of that employee
-		imgUrl, err := s.storage.UploadFileByte(ctx, fmt.Sprintf("out-%s", fileName), imageReader, int64(len(imgBytes)), "image/jpg")
-		if err != nil {
-			return nil, err
-		}
 
+		// Calculate Teleportation Check (to detect distance between location check-in & check-out employee, will get mark if suspicious )
 		distanceMeters := utils.CalculateDistance(todayAtt.CheckInLat, todayAtt.CheckInLong, req.Latitude, req.Longitude)
 		distanceKm := distanceMeters / 1000.0
 
@@ -137,6 +140,11 @@ func (s *service) Clock(ctx context.Context, userID uint, req *ClockRequest) (*A
 				isSuspicious = true
 				notes = fmt.Sprintf("[SUSPICIOUS] Speed %.2f km/h detected. Teleportation check failed.", speedKmH)
 			}
+		}
+
+		imgUrl, err := s.storage.UploadFileByte(ctx, fmt.Sprintf("out-%s", fileName), imageReader, int64(len(imgBytes)), "image/jpg")
+		if err != nil {
+			return nil, err
 		}
 
 		todayAtt.CheckOutTime = &now
@@ -155,7 +163,7 @@ func (s *service) Clock(ctx context.Context, userID uint, req *ClockRequest) (*A
 		}
 
 		// process this attendance (check-out) to geocode worker queue
-		GeocodeQueue <- GeocodeJob{
+		s.geocodeQueue <- GeocodeJob{
 			AttendanceID: todayAtt.ID,
 			Latitude:     req.Latitude,
 			Longitude:    req.Longitude,
@@ -227,11 +235,6 @@ func (s *service) GetMyHistory(ctx context.Context, userID uint, month, year, pa
 }
 
 func (s *service) GetAllRecap(ctx context.Context, filter *FilterParams) ([]RecapResponse, *response.Meta, error) {
-	loc, err := time.LoadLocation(filter.Timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation("Asia/Jakarta")
-	}
-
 	data, total, err := s.repo.FindAll(filter)
 	if err != nil {
 		return nil, nil, err
@@ -248,17 +251,17 @@ func (s *service) GetAllRecap(ctx context.Context, filter *FilterParams) ([]Reca
 		duration := "-"
 
 		if !item.CheckInTime.IsZero() {
-			cIn = item.CheckInTime.In(loc).Format("15:04")
+			cIn = item.CheckInTime.Format(constants.ShiftHourFormat)
 		}
 		if item.CheckOutTime != nil {
-			cOut = item.CheckOutTime.In(loc).Format("15:04")
+			cOut = item.CheckOutTime.Format(constants.ShiftHourFormat)
 			dur := item.CheckOutTime.Sub(item.CheckInTime)
 			duration = fmt.Sprintf("%.1f Hours", dur.Hours())
 		}
 
 		result = append(result, RecapResponse{
 			ID:           item.ID,
-			Date:         item.Date.In(loc).Format("2006-01-02"),
+			Date:         item.Date.Format(constants.DefaultTimeFormat),
 			EmployeeName: item.Employee.FullName,
 			NIK:          item.Employee.NIK,
 			Department:   item.Employee.Department.Name,
@@ -275,11 +278,6 @@ func (s *service) GetAllRecap(ctx context.Context, filter *FilterParams) ([]Reca
 }
 
 func (s *service) GenerateExcel(ctx context.Context, filter *FilterParams) (*excelize.File, error) {
-	loc, err := time.LoadLocation(filter.Timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation("Asia/Jakarta")
-	}
-
 	filter.Limit = 0
 
 	data, _, err := s.repo.FindAll(filter)
@@ -302,15 +300,15 @@ func (s *service) GenerateExcel(ctx context.Context, filter *FilterParams) (*exc
 
 		cIn := ""
 		if !item.CheckInTime.IsZero() {
-			cIn = item.CheckInTime.In(loc).Format("15:04")
+			cIn = item.CheckInTime.Format(constants.ShiftHourFormat)
 		}
 
 		cOut := ""
 		if item.CheckOutTime != nil {
-			cOut = item.CheckOutTime.In(loc).Format("15:04")
+			cOut = item.CheckOutTime.Format(constants.ShiftHourFormat)
 		}
 
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), item.Date.In(loc).Format("2006-01-02"))
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), item.Date.Format(constants.DefaultTimeFormat))
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), item.Employee.NIK)
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), item.Employee.FullName)
 		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), item.Employee.Department.Name)
@@ -324,13 +322,8 @@ func (s *service) GenerateExcel(ctx context.Context, filter *FilterParams) (*exc
 	return f, nil
 }
 
-func (s *service) GetDashboardStats(ctx context.Context, timezone string) (*DashboardStatResponse, error) {
-	loc, err := time.LoadLocation(timezone)
-	if err != nil {
-		loc, _ = time.LoadLocation("Asia/Jakarta")
-	}
-
-	todayDate := time.Now().In(loc).Format("2006-01-02")
+func (s *service) GetDashboardStats(ctx context.Context) (*DashboardStatResponse, error) {
+	todayDate := time.Now().Format(constants.DefaultTimeFormat)
 
 	totalActiveEmployee, err := s.userRepo.CountActiveEmployee()
 	if err != nil {
@@ -360,4 +353,19 @@ func (s *service) GetDashboardStats(ctx context.Context, timezone string) (*Dash
 	}
 
 	return stats, nil
+}
+
+func combineDateAndTime(date time.Time, timeStr string) (time.Time, error) {
+	parsedTime, err := time.Parse(constants.AttendanceTimeFormat, timeStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	fullTime := time.Date(
+		date.Year(), date.Month(), date.Day(),
+		parsedTime.Hour(), parsedTime.Minute(), parsedTime.Second(), 0,
+		date.Location(),
+	)
+
+	return fullTime, nil
 }
